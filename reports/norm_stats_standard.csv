@@ -1,0 +1,8 @@
+,mean,std,min,max
+age,0.0,1.0017,-1.6946,1.9229
+sleep_duration,0.0,1.0017,-1.7226,1.7068
+physical_activity_level,0.0,1.0017,-1.4504,1.4365
+stress_level,-0.0,1.0017,-1.3089,1.523
+heart_rate,0.0,1.0017,-1.3692,2.2685
+daily_steps,0.0,1.0017,-2.4321,1.9486
+sleep_disorder_missing,-0.0,1.0017,-1.1962,0.836

@@ -1,0 +1,7 @@
+Outcome: Completed data-quality inspection on Kaggle dataset (374 rows, 13 cols).
+Overall missingness ≈ 4.5% ; top missing: sleep_disorder (58.56%), person_id (0.0%), gender (0.0%).
+Detected 0 duplicate rows.
+IQR outliers detected: 15 points across 1 column(s); top: heart_rate (4.01%).
+Saved evidence to reports/ and figures/ (e.g., kaggle_missingness.csv, kaggle_iqr_outliers.csv, kaggle_numeric_summary.csv, missing_top10.png, iqr_outliers_top10.png).
+Two clean candidates prepared: 'kaggle_clean_drop_outliers.csv' (drop) and 'kaggle_clean_winsorized.csv' (winsorize). 
+Note: 'sleep_disorder' has high missingness; a missing-indicator column is provided. Median imputation is preferred for skewed features.

@@ -1,0 +1,51 @@
+feature_name
+num__age
+num__sleep_duration
+num__physical_activity_level
+num__stress_level
+num__heart_rate
+num__daily_steps
+num__sleep_disorder_missing
+cat__gender_Female
+cat__gender_Male
+cat__occupation_Accountant
+cat__occupation_Doctor
+cat__occupation_Engineer
+cat__occupation_Lawyer
+cat__occupation_Manager
+cat__occupation_Nurse
+cat__occupation_Sales Representative
+cat__occupation_Salesperson
+cat__occupation_Scientist
+cat__occupation_Software Engineer
+cat__occupation_Teacher
+cat__bmi_category_Normal
+cat__bmi_category_Normal Weight
+cat__bmi_category_Obese
+cat__bmi_category_Overweight
+cat__blood_pressure_115/75
+cat__blood_pressure_115/78
+cat__blood_pressure_117/76
+cat__blood_pressure_118/75
+cat__blood_pressure_118/76
+cat__blood_pressure_119/77
+cat__blood_pressure_120/80
+cat__blood_pressure_121/79
+cat__blood_pressure_122/80
+cat__blood_pressure_125/80
+cat__blood_pressure_125/82
+cat__blood_pressure_126/83
+cat__blood_pressure_128/84
+cat__blood_pressure_128/85
+cat__blood_pressure_129/84
+cat__blood_pressure_130/85
+cat__blood_pressure_130/86
+cat__blood_pressure_131/86
+cat__blood_pressure_132/87
+cat__blood_pressure_135/90
+cat__blood_pressure_139/91
+cat__blood_pressure_140/90
+cat__blood_pressure_140/95
+cat__blood_pressure_142/92
+cat__sleep_disorder_Insomnia
+cat__sleep_disorder_Sleep Apnea
