@@ -2,8 +2,10 @@ import pandas as pd, numpy as np, pathlib, joblib, argparse
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.metrics import roc_auc_score, precision_recall_fscore_support, RocCurveDisplay, ConfusionMatrixDisplay
+from sklearn.pipeline import Pipeline
 
 import matplotlib.pyplot as plt
+import joblib
 
 def load_xy(repo_root):
     root = pathlib.Path(repo_root) / "reports"
@@ -30,6 +32,13 @@ def run(repo_root=".", cutoff=7, out_dir="reports/logistic_cv"):
     model = LogisticRegression(max_iter=1000, class_weight="balanced", solver="lbfgs")
     model.fit(Xtr, ytr)
 
+    preprocessor = joblib.load(pathlib.Path(repo_root) / "reports" / "preprocessor.joblib")
+    final_pipeline = Pipeline([("preprocessor", preprocessor), ("classifier", model)])
+
+    # save the full pipeline
+    joblib.dump(final_pipeline, pathlib.Path(repo_root) / "reports" / "sleep_quality_model.joblib")
+    print("Saved combined pipeline in reports/sleep_quality_model.joblib")
+    
     # evaluating on test set
     yprob = model.predict_proba(Xte)[:, 1]
     m = metrics(yte, yprob)

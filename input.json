@@ -1,0 +1,13 @@
+{
+  "age": 25,
+  "gender": "Male",
+  "bmi_category": "Normal",
+  "blood_pressure": "117/76",
+  "heart_rate": 72,
+  "daily_steps": 8000,
+  "sleep_duration": 7.5,
+  "physical_activity_level": 60,
+  "stress_level": 3,
+  "occupation": "Engineer",
+  "sleep_disorder": "None"
+}
