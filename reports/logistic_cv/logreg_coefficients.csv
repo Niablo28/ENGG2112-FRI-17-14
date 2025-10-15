@@ -1,0 +1,51 @@
+,0
+num__sleep_duration,2.2021281095983234
+num__stress_level,-1.9726308231784924
+cat__occupation_Salesperson,-1.2830632678139429
+cat__occupation_Accountant,1.0849361449214747
+num__heart_rate,-0.8474105007392616
+num__age,0.6680291503062835
+cat__blood_pressure_117/76,-0.5998325760311575
+cat__occupation_Lawyer,0.5830609969306901
+num__physical_activity_level,0.5598067991185668
+cat__occupation_Nurse,-0.4968453749044677
+cat__gender_Male,-0.45771361940442334
+cat__gender_Female,0.45659296176630937
+num__sleep_disorder_missing,0.44610580487901474
+cat__sleep_disorder_Sleep Apnea,-0.415450597029234
+cat__sleep_disorder_Insomnia,0.4143299393911196
+cat__blood_pressure_140/95,-0.40363623852062064
+cat__blood_pressure_120/80,0.39150066989821086
+cat__bmi_category_Normal,0.3754211089531001
+cat__blood_pressure_125/82,0.3000272325216624
+num__daily_steps,-0.2883343906758521
+cat__bmi_category_Overweight,-0.2569795835226483
+cat__occupation_Scientist,-0.24840114476546354
+cat__blood_pressure_135/90,0.23473389145140586
+cat__blood_pressure_125/80,-0.23182505714726429
+cat__blood_pressure_128/84,0.21550397088153095
+cat__blood_pressure_130/85,0.18596918195577877
+cat__bmi_category_Normal Weight,-0.16961430194845714
+cat__occupation_Doctor,0.1676387626703396
+cat__blood_pressure_129/84,-0.12986632117633437
+cat__blood_pressure_132/87,-0.10410987735162949
+cat__occupation_Engineer,0.1001384625138932
+cat__blood_pressure_126/83,-0.07964265777249939
+cat__blood_pressure_119/77,0.07748396271073679
+cat__blood_pressure_121/79,0.07488938119952886
+cat__blood_pressure_142/92,0.06989239570044462
+cat__blood_pressure_118/76,0.05879625691488778
+cat__occupation_Manager,0.056316845743740684
+cat__blood_pressure_128/85,-0.053680976663601505
+cat__bmi_category_Obese,0.05005211887989133
+cat__occupation_Software Engineer,0.04156089594935673
+cat__blood_pressure_115/75,0.0398380139198641
+cat__blood_pressure_130/86,-0.027009470030180695
+cat__blood_pressure_140/90,-0.020091250188836247
+cat__occupation_Teacher,-0.005985199374867391
+cat__blood_pressure_131/86,-0.0013236421902950398
+cat__blood_pressure_122/80,0.0012952750157963068
+cat__occupation_Sales Representative,-0.00047777950886769707
+cat__blood_pressure_139/91,0.0002509733682829574
+cat__blood_pressure_115/78,-0.000144627872020057
+cat__blood_pressure_118/75,-0.00013916823180496683
