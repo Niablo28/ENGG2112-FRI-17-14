@@ -56,3 +56,36 @@ Future iterations will test regularisation strength (C parameter) and repeat val
 ### 📄 Full Data Description
 For a detailed explanation of all processed data files, please refer to  
 [`reports/Brief_description_of_the_data.pdf`](reports/Brief_description_of_the_data.pdf).
+
+
+## 🧠 Sleep-EDF Dataset (Week 11 Data Engineering Deliverables)
+
+This section adds a second dataset used in the project — **Sleep-EDF** — which contains physiological sleep recordings (EEG, EOG, EMG) and corresponding hypnograms. These data provide detailed insights into real sleep stages and complement the Kaggle lifestyle dataset for hybrid model development.
+
+### Extracted Features and Outputs
+The raw `.edf` files were processed and analyzed in the notebook [`03_sleepedf_feature_extraction.ipynb`](notebooks/03_sleepedf_feature_extraction.ipynb) using **MNE**, **YASA**, and **SciPy**. The workflow involved signal loading, hypnogram alignment, 30-second epoch segmentation, and computation of EEG bandpower (δ, θ, α, β), EOG variance, and EMG RMS amplitude.
+
+After cleaning and normalization, the following outputs were generated:
+
+#### 📊 Processed Reports (`/reports/`)
+- `sleepedf_features.csv` — Extracted epoch-level features with subject and stage labels (≈ 5450 rows).  
+- `sleepedf_numeric_summary.csv` — Statistical summary of each feature (mean, std, skewness, kurtosis).  
+- `sleepedf_missingness.csv` — Missing-value overview (all <1%).  
+- `sleepedf_iqr_outliers.csv` — Outlier proportions per feature using IQR detection.  
+- `norm_stats_standard_sleepedf.csv` — Z-score normalization parameters for reproducibility.  
+
+#### 🖼 Figures (`/figures/`)
+- `sleepedf_heatmap.png` — Correlation heatmap showing relationships among EEG/EOG/EMG features.  
+- `sleepedf_histograms.png` — Feature distributions across sleep stages.  
+- `sleepedf_boxplots.png` — Outlier and variability visualization for major numerical features.  
+
+#### 🧾 Notebook (`/notebooks/`)
+- `03_sleepedf_feature_extraction.ipynb` — Full end-to-end pipeline for EDF loading, feature computation, and export.  
+
+### Integration Note for ML Engineers
+The Sleep-EDF dataset expands the project beyond lifestyle indicators by adding **true physiological measures** of sleep.  
+ML engineers can now train models that combine both behavioral (Kaggle) and physiological (EDF) features to improve generalization and stage-specific prediction.  
+The feature table (`sleepedf_features.csv`) is ready for merging or standalone modeling.
+
+**Commit reference:**  
+`Add Sleep-EDF extracted features, numeric summaries, and figures (Week 11 Data Engineering deliverables)`
