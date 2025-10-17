@@ -4,7 +4,7 @@ This project predicts a person's sleep quality (good or bad) based on their dail
 
 ---
 
-## 📊 Data Handoff Summary (Week 09)
+## 📊 Kaggle Sleep Health Dataset – Preprocessing & Model-Ready Outputs (Week 09)
 
 This section explains which files are required for modeling and which are for documentation.
 
