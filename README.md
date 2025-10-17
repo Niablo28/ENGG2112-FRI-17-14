@@ -58,7 +58,7 @@ For a detailed explanation of all processed data files, please refer to
 [`reports/Brief_description_of_the_data.pdf`](reports/Brief_description_of_the_data.pdf).
 
 
-## 🧠 Sleep-EDF Dataset (Week 11 Data Engineering Deliverables)
+## ⭐️ Sleep-EDF Dataset (Week 11 Data Engineering Deliverables)
 
 This section adds a second dataset used in the project — **Sleep-EDF** — which contains physiological sleep recordings (EEG, EOG, EMG) and corresponding hypnograms. These data provide detailed insights into real sleep stages and complement the Kaggle lifestyle dataset for hybrid model development.
 
