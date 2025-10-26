@@ -78,7 +78,7 @@ def run(repo_root=".", cutoff=7, out_dir="reports/hybrid_model"):
         ('classifier', model)
     ])
     
-    model_path = pathlib.Path(repo_root) / "reports" / "sleep_quality_model_hybrid.joblib"
+    model_path = pathlib.Path(repo_root) / "models" / "sleep_quality_model_hybrid.joblib"
     joblib.dump(full_pipeline, model_path)
     
     y_prob_test = model.predict_proba(X_test_proc)[:, 1]

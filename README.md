@@ -119,8 +119,8 @@ We integrated the Sleep-EDF physiological data with the Kaggle lifestyle dataset
 - `reports/kaggle_edf_merged.csv` — Combined 376-subject dataset
 
 #### Models
-- `reports/sleep_quality_model.joblib` — **Production model** (Baseline, Kaggle-only)
-- `reports/sleep_quality_model_hybrid.joblib` — Hybrid model (for future use if more EDF data available)
+- `models/sleep_quality_model.joblib` — **Production model** (Baseline, Kaggle-only)
+- `models/sleep_quality_model_hybrid.joblib` — Hybrid model (for future use if more EDF data available)
 
 #### Analysis Reports
 - `reports/MODEL_RESULTS.md` — **Comprehensive results** for all 3 models with metrics and recommendations
@@ -139,7 +139,7 @@ We integrated the Sleep-EDF physiological data with the Kaggle lifestyle dataset
 ### Recommendations
 
 **For This Project:**
-- ✅ Use **baseline model** for deployment (already in production at `reports/sleep_quality_model.joblib`)
+- ✅ Use **baseline model** for deployment (already in production at `models/sleep_quality_model.joblib`)
 - ✅ Document EDF integration as **proof-of-concept** showing feasibility
 - ✅ Highlight limitations: small EDF sample (n=2), synthetic labels, extreme sparsity
 

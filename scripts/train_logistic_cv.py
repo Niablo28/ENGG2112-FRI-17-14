@@ -32,12 +32,12 @@ def run(repo_root=".", cutoff=7, out_dir="reports/logistic_cv"):
     model = LogisticRegression(max_iter=1000, class_weight="balanced", solver="lbfgs")
     model.fit(Xtr, ytr)
 
-    preprocessor = joblib.load(pathlib.Path(repo_root) / "reports" / "preprocessor.joblib")
+    preprocessor = joblib.load(pathlib.Path(repo_root) / "models" / "preprocessor.joblib")
     final_pipeline = Pipeline([("preprocessor", preprocessor), ("classifier", model)])
 
     # save the full pipeline
-    joblib.dump(final_pipeline, pathlib.Path(repo_root) / "reports" / "sleep_quality_model.joblib")
-    print("Saved combined pipeline in reports/sleep_quality_model.joblib")
+    joblib.dump(final_pipeline, pathlib.Path(repo_root) / "models" / "sleep_quality_model.joblib")
+    print("Saved combined pipeline in models/sleep_quality_model.joblib")
     
     # evaluating on test set
     yprob = model.predict_proba(Xte)[:, 1]

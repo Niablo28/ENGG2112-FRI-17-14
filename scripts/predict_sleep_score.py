@@ -1,6 +1,6 @@
 import json, argparse, joblib, pandas as pd, pathlib
 
-def predict_from_json(input_json, model_path="reports/sleep_quality_model.joblib"):
+def predict_from_json(input_json, model_path="models/sleep_quality_model.joblib"):
     model = joblib.load(model_path)
     data = pd.DataFrame([input_json])
     

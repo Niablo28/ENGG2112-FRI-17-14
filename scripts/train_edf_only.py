@@ -74,7 +74,7 @@ def run(repo_root=".", cutoff=7, out_dir="reports/edf_only_model"):
     accuracy = np.mean([p == a for p, a in zip(predictions, actual)])
     
     pipeline.fit(X, y)
-    model_path = pathlib.Path(repo_root) / "reports" / "sleep_quality_model_edf_only.joblib"
+    model_path = pathlib.Path(repo_root) / "models" / "sleep_quality_model_edf_only.joblib"
     joblib.dump(pipeline, model_path)
     
     coefs = pd.Series(pipeline.named_steps['classifier'].coef_[0], index=X.columns)

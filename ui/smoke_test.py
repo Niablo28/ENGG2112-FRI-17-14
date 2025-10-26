@@ -1,7 +1,7 @@
 import joblib, pandas as pd
 from pathlib import Path
 
-MODEL_PATH = Path("reports") / "sleep_quality_model.joblib"
+MODEL_PATH = Path("models") / "sleep_quality_model.joblib"
 
 def main():
     model = joblib.load(MODEL_PATH)
