@@ -14,7 +14,6 @@ This section explains which files are required for modeling and which are for do
 - `reports/X_test_proc.parquet`, `reports/y_test.csv` — Processed test data.
 - `reports/preprocess_feature_names.csv` — Feature name mapping.
 - `reports/data_dictionary.md` — Description of variables and meanings.
-- `reports/README_preprocessing.md` — Step-by-step preprocessing documentation.
 
 ### Supporting Files
 - `reports/kaggle_cleaned_snapshot.csv`
@@ -27,30 +26,7 @@ This section explains which files are required for modeling and which are for do
 - `reports/norm_stats_standard.csv`
 - `reports/norm_stats_minmax.csv`
 - `reports/norm_stats_robust.csv`
-- `reports/outcome_week9.txt`
 
-### Stuff for the report (Temporarily in readme)
-#### Things to mention in report
-- small dataset
-- mention data leakage and overfitting
-- Methods – Logistic Regression Model
-  - " Logistic Regression was implemented using scikit-learn (LogisticRegression, class_weight = “balanced”) following the probabilistic framework described in Week 5 lectures.
-The model assumes a linear relationship between input features and the log-odds of achieving good sleep quality.
-Training used 5-fold Stratified Cross-Validation to reduce sampling bias.
-Continuous variables were scaled and categorical features one-hot encoded through the pre-processing pipeline (preprocessor.joblib).
-Model parameters (coefficients β) were estimated via maximum-likelihood, optimised using the LBFGS solver until convergence (max_iter = 1000).
-Evaluation metrics included accuracy, precision, recall, F1-score, and ROC-AUC, in accordance with Week 2 guidelines on classification performance. "
-- Findings – Logistic Regression and Trade-off Analysis
-  - "Logistic Regression achieved the best overall performance among baseline classifiers, with mean cross-validation accuracy ≈ 0.993 and ROC-AUC ≈ 0.999.
-The most influential predictors were sleep duration (+2.20) and stress level (–1.97), confirming that longer rest and lower stress are strong indicators of high sleep quality.
-Occupational categories such as Salesperson (–1.28) and Nurse (–0.50) were negatively correlated with good sleep, while Accountant (+1.08) and Lawyer (+0.58) showed positive effects, suggesting lifestyle regularity impacts outcomes.
-The ROC curve indicated near-perfect separability of the two classes at a default threshold (0.5).
-Given the project’s recall-priority objective (avoiding false “good” predictions), subsequent threshold sweeps will confirm the optimal operating point (likely ≈ 0.45).
-Overall, the model meets and exceeds the acceptance target (AUC ≥ 0.75, F1 ≥ 0.70) defined in the proposal."
-- Cross-validation and shuffle-split results show minimal variance (AUC ≈ 0.998 ± 0.0035), with the learning curve demonstrating convergence between training and validation F1 scores. These patterns indicate that the logistic regression model generalises well and is not overfitting to the small dataset. Nevertheless, given the limited sample size (n ≈ 374), external validation on unseen data is recommended before deployment.
-- Discussion – Reflection
-  - The exceptionally high metrics imply potential overfitting or feature redundancy due to small sample size (~374 records).
-Future iterations will test regularisation strength (C parameter) and repeat validation with the winsorised and drop-outlier datasets to verify robustness.
 ---
 
 ### 📄 Full Data Description
@@ -89,3 +65,97 @@ The feature table (`sleepedf_features.csv`) is ready for merging or standalone m
 
 **Commit reference:**  
 `Add Sleep-EDF extracted features, numeric summaries, and figures (Week 11 Data Engineering deliverables)`
+
+---
+
+## 🔬 Hybrid Model: Kaggle + EDF Integration (Final Deliverable)
+
+### Overview
+We integrated the Sleep-EDF physiological data with the Kaggle lifestyle dataset to create a **hybrid model** that combines both feature types. The goal was to assess whether adding physiological measurements (EEG, EOG, EMG, sleep architecture) improves prediction accuracy over lifestyle features alone.
+
+### Approach: Two Strategies Tested
+
+#### **Strategy A: Baseline Model (Kaggle-Only)**
+- **Dataset:** 374 subjects with lifestyle features
+- **Features:** Age, gender, occupation, sleep duration, activity level, stress, BMI, blood pressure, heart rate, daily steps, sleep disorder
+- **Performance:** ROC-AUC = 0.999, F1 = 1.000 (near-perfect)
+
+#### **Strategy B: Hybrid Model (Kaggle + EDF)**
+- **Dataset:** 376 subjects (374 Kaggle + 2 EDF)
+- **Features:** 14 lifestyle + 29 physiological (43 total)
+- **Data Engineering Steps:**
+  1. Aggregated 5,450 EDF epochs → 2 subject-level records with sleep architecture metrics
+  2. Created synthetic sleep quality labels based on sleep efficiency heuristics
+  3. Generated lifestyle proxy features for EDF subjects (using dataset medians)
+  4. Merged datasets with NaN imputation for missing physiological features
+- **Performance:** ROC-AUC = 0.998, F1 = 0.991
+
+#### **Strategy C: EDF-Only Model (Physiological Features)**
+- **Dataset:** 2 EDF subjects with only physiological features
+- **Result:** ❌ **Training Failed** — Both subjects had same label (poor sleep), preventing classifier training
+- **Conclusion:** Need larger EDF dataset with diverse sleep quality levels
+
+### Key Findings
+
+1. **No Performance Improvement:** Hybrid model performs similarly to baseline (AUC: 0.998 vs. 0.999)
+2. **Feature Sparsity Issue:** 99.5% of physiological features are missing (only 2/376 subjects have values)
+3. **Lifestyle Features Dominate:** Top predictors remain sleep duration (+2.5), stress level (-1.8), occupation
+4. **Sample Size Limitation:** Adding only 2 EDF subjects provides no statistical benefit
+
+### Model Comparison Summary
+
+| Model | Subjects | Features | Test ROC-AUC | Test F1 | CV ROC-AUC |
+|-------|----------|----------|--------------|---------|------------|
+| **Baseline (Kaggle)** | 374 | 14 | 1.000 | 1.000 | 0.999 ± 0.004 |
+| **Hybrid (Kaggle+EDF)** | 376 | 43 | 0.978 | 0.991 | 0.998 ± 0.003 |
+| **EDF-Only** | 2 | 29 | N/A | N/A | Training failed |
+
+**Winner:** **Baseline Model** (simpler, no missing data, same performance)
+
+### Deliverables
+
+#### Data Files
+- `reports/sleepedf_subject_aggregated.csv` — 2 EDF subjects with physiological + lifestyle features
+- `reports/kaggle_edf_merged.csv` — Combined 376-subject dataset
+
+#### Models
+- `reports/sleep_quality_model.joblib` — **Production model** (Baseline, Kaggle-only)
+- `reports/sleep_quality_model_hybrid.joblib` — Hybrid model (for future use if more EDF data available)
+
+#### Analysis Reports
+- `reports/MODEL_RESULTS.md` — **Comprehensive results** for all 3 models with metrics and recommendations
+- `reports/hybrid_model/hybrid_metrics_test.csv` — Test performance metrics
+- `reports/hybrid_model/hybrid_coefficients.csv` — Feature importance rankings
+- `reports/hybrid_model/hybrid_cv_results.csv` — Cross-validation results
+- `reports/hybrid_model/roc_hybrid.png` — ROC curve visualization
+- `reports/hybrid_model/cm_hybrid.png` — Confusion matrix
+- `reports/edf_only_model/edf_only_summary.csv` — EDF-only diagnostic info
+
+#### Code
+- `scripts/merge_edf_kaggle.py` — Data merging pipeline
+- `scripts/train_hybrid_model.py` — Hybrid model training script
+- `scripts/train_edf_only.py` — EDF-only model training script
+
+### Recommendations
+
+**For This Project:**
+- ✅ Use **baseline model** for deployment (already in production at `reports/sleep_quality_model.joblib`)
+- ✅ Document EDF integration as **proof-of-concept** showing feasibility
+- ✅ Highlight limitations: small EDF sample (n=2), synthetic labels, extreme sparsity
+
+**For Future Work:**
+- Expand EDF dataset to ≥50 subjects with diverse sleep quality
+- Collect paired data (same subjects providing both lifestyle AND physiological data)
+- Validate synthetic labels against clinician ratings
+- Test regularization techniques (L1/L2) for high-dimensional physiological features
+
+### Conclusion
+
+While the hybrid model integration was **technically successful** (demonstrating end-to-end data engineering), it provided **no practical benefit** due to:
+1. Insufficient EDF sample size (2 subjects vs. 374)
+2. Lack of class diversity in EDF labels (both poor sleep)
+3. Extreme feature sparsity (99.5% missing physiological data)
+
+The exercise validates that **lifestyle features alone are sufficient** for accurate sleep quality prediction in this dataset. Physiological features could become valuable with a larger, more diverse EDF dataset collected alongside lifestyle measurements.
+
+**Full analysis:** See `reports/MODEL_RESULTS.md`
