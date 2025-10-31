@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Data & Models (keep structure, exclude large files)
+data/raw/
+reports/*.csv
+reports/*.parquet
+models/*.pkl
+*.joblib
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env
+.envrc
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+reports/run_log.txt
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+
