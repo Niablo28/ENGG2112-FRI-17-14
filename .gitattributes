@@ -1,0 +1,6 @@
+# Exclude heavyweight dev folders from source archives
+scripts/deprecated/ export-ignore
+.ipynb_checkpoints/ export-ignore
+__pycache__/ export-ignore
+*.ipynb export-ignore
+

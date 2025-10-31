@@ -1,10 +1,16 @@
+"""
+Threshold sweep analysis using OOF (out-of-fold) probabilities from CV.
+WARNING: Do NOT use test set probabilities here - that causes data leakage.
+Use OOF probabilities from retrain_end_to_end.py (reports/oof_probs_logreg.csv).
+"""
 import pandas as pd
 import numpy as np
 import argparse
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 def main(proba_csv, out_png):
-    #columns: y_true, y_prob
+    # Expected columns: y_true, y_prob (from OOF predictions, NOT test)
     df = pd.read_csv(proba_csv)
     y = df["y_true"].values
     p = df["y_prob"].values
@@ -27,7 +33,9 @@ def main(proba_csv, out_png):
 
 if __name__=="__main__":
     ap=argparse.ArgumentParser()
-    ap.add_argument("--proba_csv", required=True)
-    ap.add_argument("--out_png", required=True)
+    repo_root = Path(__file__).parent.parent
+    default_oof = repo_root / "reports" / "oof_probs_logreg.csv"
+    ap.add_argument("--proba_csv", default=str(default_oof), help="OOF probabilities CSV (default: reports/oof_probs_logreg.csv)")
+    ap.add_argument("--out_png", default=str(repo_root / "reports" / "threshold_sweep.png"), help="Output PNG path")
     args=ap.parse_args()
     main(args.proba_csv, args.out_png)

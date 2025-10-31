@@ -1,12 +1,55 @@
 import json
+import sys
 import joblib
 import pandas as pd
 import streamlit as st
 from pathlib import Path
 import plotly.graph_objects as go
+import glob
+import os
 
-MODEL_PATH = Path("models") / "sleep_quality_model.joblib"
+# set_page_config MUST be the first Streamlit command
+st.set_page_config(
+    page_title="Sleep Quality AI Predictor",
+    page_icon="🌙",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+def _resolve_model_path():
+    env_path = os.environ.get("MODEL_PATH")
+    if env_path and Path(env_path).exists():
+        return Path(env_path)
+    pref = Path("models") / "model_augmented_latest.joblib"
+    if pref.exists():
+        return pref
+    candidates = sorted(map(Path, glob.glob("models/*.joblib")))
+    if candidates:
+        return candidates[-1]
+    raise FileNotFoundError("No model artifact found under models/")
+
+MODEL_PATH = _resolve_model_path()
+# Default threshold; can be overridden via sidebar control
 THRESHOLD = 0.5
+
+# Ensure custom transformers used in the pickled model are importable
+SCRIPTS_DIR = Path(__file__).parent.parent / "scripts"
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.append(str(SCRIPTS_DIR))
+
+# Backward-compat shim: some older pickles reference __main__._split_bp
+# Ensure the attribute exists by aliasing from scripts.shared_transforms
+try:
+    import importlib, types
+    stx = importlib.import_module('scripts.shared_transforms')
+    import __main__ as _main
+    # Attach attributes if missing
+    if not hasattr(_main, '_split_bp'):
+        setattr(_main, '_split_bp', stx._split_bp)
+    if not hasattr(_main, '_get_bp_split_feature_names_out'):
+        setattr(_main, '_get_bp_split_feature_names_out', stx._get_bp_split_feature_names_out)
+except Exception:
+    pass
 
 st.markdown("""
 <style>
@@ -14,13 +57,13 @@ st.markdown("""
         padding: 2rem 1rem;
     }
     .metric-card {
-        background: white;
+        background: #1f2937; /* dark card */
         padding: 1.5rem;
         border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255,255,255,0.08);
     }
     .recommendation-box {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
         padding: 1rem;
         border-radius: 10px;
         margin: 0.5rem 0;
@@ -44,13 +87,41 @@ def load_model():
         raise FileNotFoundError(f"Model not found at {MODEL_PATH.resolve()}")
     return joblib.load(MODEL_PATH)
 
-def predict(payload: dict):
+def _normalize_payload(payload: dict) -> dict:
+    """Normalize categorical labels to the training vocabulary."""
+    normalized = payload.copy()
+    # Normalize BMI categories
+    bmi_map = {
+        "Normal Weight": "Normal",
+    }
+    if normalized.get("bmi_category") in bmi_map:
+        normalized["bmi_category"] = bmi_map[normalized["bmi_category"]]
+    # Normalize occupations
+    occupation_map = {
+        "Sales Representative": "Salesperson",
+    }
+    if normalized.get("occupation") in occupation_map:
+        normalized["occupation"] = occupation_map[normalized["occupation"]]
+    return normalized
+
+def predict(payload: dict, threshold: float):
     model = load_model()
+    payload = _normalize_payload(payload)
     payload_with_missing = payload.copy()
-    payload_with_missing["sleep_disorder_missing"] = 1 if payload["sleep_disorder"] == "None" else 0
+    # Fix: "None" is a valid category (present), not missing. Missing means None or empty string.
+    val = payload.get("sleep_disorder", None)
+    is_missing = (val is None) or (isinstance(val, str) and val.strip() == "")
+    payload_with_missing["sleep_disorder_missing"] = 1 if is_missing else 0
+    # Pre-split blood pressure into numeric columns (pipeline expects bp_sys/bp_dia)
+    bp_val = str(payload_with_missing.get("blood_pressure", ""))
+    import re
+    m = re.match(r"^(\d{2,3})/(\d{2,3})$", bp_val)
+    if m:
+        payload_with_missing["bp_sys"] = float(m.group(1))
+        payload_with_missing["bp_dia"] = float(m.group(2))
     df = pd.DataFrame([payload_with_missing])
     prob_good = float(model.predict_proba(df)[0, 1])
-    label = "Good" if prob_good >= THRESHOLD else "Poor"
+    label = "Good" if prob_good >= threshold else "Poor"
     score = round(prob_good * 100.0, 1)
     return {"sleep_score": score, "prob_good": prob_good, "predicted_label": label}
 
@@ -86,11 +157,10 @@ def create_gauge_chart(score):
         bar_color = "#00B894"
     
     fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
+        mode="gauge+number",
         value=score,
         domain={'x': [0, 1], 'y': [0, 1]},
         title={'text': "Sleep Score", 'font': {'size': 24, 'color': '#4A90E2'}},
-        delta={'reference': 70},
         gauge={
             'axis': {'range': [None, 100], 'tickwidth': 1},
             'bar': {'color': bar_color, 'thickness': 0.8},
@@ -111,19 +181,13 @@ def create_gauge_chart(score):
     ))
     
     fig.update_layout(
-        paper_bgcolor="white",
-        font={'color': "darkblue", 'family': "Arial"},
+        paper_bgcolor="#0E1117",
+        plot_bgcolor="#0E1117",
+        font={'color': "#E5E7EB", 'family': "Arial"},
         height=300
     )
     
     return fig
-
-st.set_page_config(
-    page_title="Sleep Quality AI Predictor",
-    page_icon="🌙",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 col_header1, col_header2 = st.columns([3, 1])
 with col_header1:
@@ -131,7 +195,7 @@ with col_header1:
     st.markdown("<p style='color: #666; font-size: 1.2em;'>Discover your sleep score and get personalized insights</p>", unsafe_allow_html=True)
 with col_header2:
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.caption(f"Model: Baseline (ROC-AUC: 0.999)")
+    st.caption(f"Model: Augmented (ROC-AUC: 0.996)")
 
 st.divider()
 
@@ -152,11 +216,20 @@ with st.sidebar:
     
     st.header("📊 Model Info")
     st.info("""
-    **Model Type:** Logistic Regression  
-    **Performance:** ROC-AUC = 0.999  
-    **Training Data:** 374 subjects  
-    **Top Features:** Sleep duration, stress level, occupation
+    **Model Type:** Logistic Regression (Augmented)  
+    **Performance:** ROC-AUC = 0.996  
+    **Training Data:** 594 subjects (374 original + 220 synthetic)  
+    **Top Features:** Sleep duration, stress level, occupation  
+    **Improvements:** Better edge case handling, sleep disorder detection, severe case recognition
     """)
+    st.caption("This tool is for educational purposes and general wellness insights only and is not medical advice.")
+    st.divider()
+    st.header("⚙️ Prediction Threshold")
+    st.caption("Choose the probability cutoff for 'Good' vs 'Poor'.")
+    user_threshold = st.slider(
+        "Threshold (P(Good) ≥ threshold ⇒ Good)",
+        min_value=0.1, max_value=0.9, value=THRESHOLD, step=0.05
+    )
 
 with st.form("sleep_predictor_form"):
     col1, col2 = st.columns(2)
@@ -165,11 +238,8 @@ with st.form("sleep_predictor_form"):
         st.subheader("👤 Personal Information")
         age = st.slider("Age (years)", min_value=18, max_value=100, value=35, step=1)
         gender = st.radio("Gender", ["Male", "Female"], horizontal=True)
-        occupation = st.selectbox(
-            "Occupation",
-            ["Software Engineer", "Doctor", "Nurse", "Teacher", "Engineer", 
-             "Accountant", "Lawyer", "Salesperson", "Scientist", "Other"]
-        )
+        # Occupation removed from UI; default to 'Other' internally
+        occupation = "Other"
         
         st.markdown("---")
         
@@ -180,11 +250,8 @@ with st.form("sleep_predictor_form"):
         )
         st.caption(f"Healthy range: 60-100 bpm")
         
-        blood_pressure = st.selectbox(
-            "Blood Pressure",
-            ["115/75", "117/76", "120/80", "125/80", "130/85", "140/90", "140/95"],
-            index=3
-        )
+        # Blood pressure removed from UI; default internally
+        blood_pressure = "125/80"
         
         bmi_category = st.selectbox(
             "BMI Category",
@@ -194,22 +261,8 @@ with st.form("sleep_predictor_form"):
     
     with col2:
         st.subheader("🏃 Lifestyle")
-        
-        daily_steps = st.slider(
-            "Daily Steps",
-            min_value=0, max_value=20000, value=8000, step=100
-        )
-        
-        steps_progress = daily_steps / 10000
-        if daily_steps < 6000:
-            st.warning("⚠️ Below recommended 8,000 steps")
-            st.progress(min(steps_progress, 1.0))
-        elif daily_steps >= 10000:
-            st.success("✅ Excellent activity level!")
-            st.progress(min(steps_progress, 1.0))
-        else:
-            st.info("📊 Good progress toward 10,000 steps")
-            st.progress(min(steps_progress, 1.0))
+        # Daily steps removed from UI; default internally
+        daily_steps = 8000
         
         physical_activity_level = st.slider(
             "Physical Activity Level (0-100)",
@@ -235,18 +288,19 @@ with st.form("sleep_predictor_form"):
         st.subheader("😴 Sleep Habits")
         
         sleep_duration = st.slider(
-            "Sleep Duration (hours per night)",
+            "Sleep Duration (hours per night, 4–12)",
             min_value=4.0, max_value=12.0, value=7.5, step=0.5
         )
+        st.caption("<6h: critically low • 6–7h: below optimal • 7–9h: optimal • >9h: oversleeping may reduce quality", unsafe_allow_html=True)
         
         if sleep_duration < 6:
             st.error(f"⚠️ Critically low ({sleep_duration}h). Medical consultation recommended.")
         elif sleep_duration < 7:
             st.warning(f"⚠️ Below optimal (7-9h recommended)")
-        elif sleep_duration >= 9:
-            st.info(f"ℹ️ Good duration (7-9h is optimal range)")
+        elif sleep_duration > 9:
+            st.warning("⚠️ Oversleeping (>9h) may reduce quality.")
         else:
-            st.success("✅ Optimal sleep duration!")
+            st.success("✅ Optimal sleep duration (7–9h).")
         
         sleep_disorder = st.selectbox(
             "Sleep Disorder",
@@ -260,11 +314,11 @@ if submitted:
         payload = {
             "age": int(age),
             "gender": gender,
-            "occupation": occupation,
+                "occupation": occupation,
             "bmi_category": bmi_category,
-            "blood_pressure": blood_pressure,
+                "blood_pressure": blood_pressure,
             "heart_rate": int(heart_rate),
-            "daily_steps": int(daily_steps),
+                "daily_steps": int(daily_steps),
             "sleep_duration": float(sleep_duration),
             "physical_activity_level": int(physical_activity_level),
             "stress_level": int(stress_level),
@@ -272,7 +326,7 @@ if submitted:
         }
         
         try:
-            result = predict(payload)
+            result = predict(payload, threshold=user_threshold)
             score = result['sleep_score']
             
             st.divider()
@@ -303,25 +357,16 @@ if submitted:
                     </div>
                     """, unsafe_allow_html=True)
                 
-                st.markdown(f"""
-                <div class='metric-card'>
-                    <p style='text-align: center; margin: 0.5em 0;'>Confidence</p>
-                    <h3 style='text-align: center; color: #4A90E2;'>{result['prob_good']:.1%}</h3>
-                </div>
-                """, unsafe_allow_html=True)
+                # Confidence display removed per request
             
-            st.markdown("### 📊 Detailed Metrics")
-            metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
-            
+            st.markdown("### 📊 Details")
+            metric_col1, metric_col2, metric_col4 = st.columns([1,1,1])
             with metric_col1:
-                delta_sleep = sleep_duration - 7.5
-                st.metric("Sleep Score", f"{score}/100", f"{score-70:.1f}")
+                st.markdown(f"<div class='metric-card'><h3 style='margin:0;color:#E5E7EB;'>Sleep Score</h3><p style='margin:0;color:#9CA3AF;'>{score}/100</p></div>", unsafe_allow_html=True)
             with metric_col2:
-                st.metric("Quality Label", result["predicted_label"])
-            with metric_col3:
-                st.metric("Confidence", f"{result['prob_good']:.1%}")
+                st.markdown(f"<div class='metric-card'><h3 style='margin:0;color:#E5E7EB;'>Quality</h3><p style='margin:0;color:#9CA3AF;'>{result['predicted_label']}</p></div>", unsafe_allow_html=True)
             with metric_col4:
-                st.metric("Sleep Duration", f"{sleep_duration}h", f"{delta_sleep:+.1f}h")
+                st.markdown(f"<div class='metric-card'><h3 style='margin:0;color:#E5E7EB;'>Sleep Duration</h3><p style='margin:0;color:#9CA3AF;'>{sleep_duration}h</p></div>", unsafe_allow_html=True)
             
             st.markdown("### 💡 Personalized Recommendations")
             recommendations = generate_recommendations(payload, score)
@@ -338,9 +383,9 @@ if submitted:
             
             st.markdown("### 🔑 Key Factors Affecting Your Score")
             top_features_data = pd.DataFrame({
-                'Factor': ['Sleep Duration', 'Stress Level', 'Occupation Type', 'Heart Rate', 'Daily Steps'],
-                'Impact': ['High', 'High', 'Medium', 'Medium', 'Medium'],
-                'Your Value': [f"{sleep_duration}h", f"{stress_level}/10", occupation, f"{heart_rate} bpm", f"{daily_steps:,}"]
+                'Factor': ['Sleep Duration', 'Stress Level', 'Heart Rate', 'Physical Activity'],
+                'Impact': ['High', 'High', 'Medium', 'Medium'],
+                'Your Value': [f"{sleep_duration}h", f"{stress_level}/10", f"{heart_rate} bpm", f"{physical_activity_level}/100"]
             })
             st.dataframe(top_features_data, use_container_width=True, hide_index=True)
             

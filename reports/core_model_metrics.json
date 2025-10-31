@@ -1,0 +1,140 @@
+[
+  {
+    "name": "Kaggle Logistic Baseline",
+    "artefact": "model_kaggle_baseline.joblib",
+    "dataset": "kaggle_clean_winsorized.csv",
+    "n_samples": 374,
+    "n_features": 13,
+    "train_samples": 299,
+    "test_samples": 75,
+    "positive_cases": 257,
+    "negative_cases": 117,
+    "metrics": {
+      "threshold": 0.55,
+      "accuracy": 0.9733333333333334,
+      "precision": 0.9629629629629629,
+      "recall": 1.0,
+      "f1": 0.9811320754716981,
+      "roc_auc": 0.9966555183946488,
+      "threshold_0_5_accuracy": 0.9733333333333334,
+      "threshold_0_5_precision": 0.9629629629629629,
+      "threshold_0_5_recall": 1.0,
+      "threshold_0_5_f1": 0.9811320754716981
+    }
+  },
+  {
+    "name": "Augmented Logistic",
+    "artefact": "model_augmented_latest.joblib",
+    "dataset": "kaggle_augmented.csv",
+    "n_samples": 744,
+    "n_features": 13,
+    "train_samples": 595,
+    "test_samples": 149,
+    "positive_cases": 287,
+    "negative_cases": 457,
+    "metrics": {
+      "threshold": 0.8,
+      "accuracy": 0.9865771812080537,
+      "precision": 0.9824561403508771,
+      "recall": 0.9824561403508771,
+      "f1": 0.9824561403508771,
+      "roc_auc": 0.9977116704805492,
+      "threshold_0_5_accuracy": 0.9798657718120806,
+      "threshold_0_5_precision": 0.9655172413793104,
+      "threshold_0_5_recall": 0.9824561403508771,
+      "threshold_0_5_f1": 0.9739130434782609
+    }
+  },
+  {
+    "name": "Kaggle KNN (k=5)",
+    "artefact": "model_kaggle_knn.joblib",
+    "dataset": "kaggle_clean_winsorized.csv",
+    "n_samples": 374,
+    "n_features": 13,
+    "train_samples": 299,
+    "test_samples": 75,
+    "positive_cases": 257,
+    "negative_cases": 117,
+    "metrics": {
+      "threshold": 0.8,
+      "accuracy": 0.9866666666666667,
+      "precision": 1.0,
+      "recall": 0.9807692307692307,
+      "f1": 0.9902912621359223,
+      "roc_auc": 0.9991638795986623,
+      "threshold_0_5_accuracy": 0.9733333333333334,
+      "threshold_0_5_precision": 0.9629629629629629,
+      "threshold_0_5_recall": 1.0,
+      "threshold_0_5_f1": 0.9811320754716981
+    }
+  },
+  {
+    "name": "Kaggle Gaussian NB",
+    "artefact": "model_kaggle_nb.joblib",
+    "dataset": "kaggle_clean_winsorized.csv",
+    "n_samples": 374,
+    "n_features": 13,
+    "train_samples": 299,
+    "test_samples": 75,
+    "positive_cases": 257,
+    "negative_cases": 117,
+    "metrics": {
+      "threshold": 0.8,
+      "accuracy": 0.8533333333333334,
+      "precision": 0.8253968253968254,
+      "recall": 1.0,
+      "f1": 0.9043478260869565,
+      "roc_auc": 0.9983277591973244,
+      "threshold_0_5_accuracy": 0.84,
+      "threshold_0_5_precision": 0.8125,
+      "threshold_0_5_recall": 1.0,
+      "threshold_0_5_f1": 0.896551724137931
+    }
+  },
+  {
+    "name": "Hybrid Logistic (Kaggle + EDF)",
+    "artefact": "model_hybrid.joblib",
+    "dataset": "kaggle_edf_merged.csv",
+    "n_samples": 376,
+    "n_features": 42,
+    "train_samples": 300,
+    "test_samples": 76,
+    "positive_cases": 257,
+    "negative_cases": 119,
+    "metrics": {
+      "threshold": 0.6500000000000001,
+      "accuracy": 0.9868421052631579,
+      "precision": 0.9811320754716981,
+      "recall": 1.0,
+      "f1": 0.9904761904761905,
+      "roc_auc": 0.9759615384615384,
+      "threshold_0_5_accuracy": 0.9868421052631579,
+      "threshold_0_5_precision": 0.9811320754716981,
+      "threshold_0_5_recall": 1.0,
+      "threshold_0_5_f1": 0.9904761904761905
+    }
+  },
+  {
+    "name": "EDF Only (Dummy when single class)",
+    "artefact": "model_edf_only.joblib",
+    "dataset": "sleepedf_subject_aggregated.csv",
+    "n_samples": 2,
+    "n_features": 36,
+    "train_samples": 2,
+    "test_samples": 0,
+    "positive_cases": 0,
+    "negative_cases": 2,
+    "metrics": {
+      "threshold": 0.8,
+      "accuracy": 1.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "roc_auc": null,
+      "threshold_0_5_accuracy": 1.0,
+      "threshold_0_5_precision": 0.0,
+      "threshold_0_5_recall": 0.0,
+      "threshold_0_5_f1": 0.0
+    }
+  }
+]
