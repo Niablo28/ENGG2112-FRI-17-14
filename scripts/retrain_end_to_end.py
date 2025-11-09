@@ -8,7 +8,11 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
+from sklearn.model_selection import (
+    StratifiedKFold,
+    StratifiedGroupKFold,
+    cross_validate,
+)
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, PolynomialFeatures, FunctionTransformer
@@ -88,6 +92,7 @@ def create_preprocessing_pipeline():
 def main(cutoff=7, random_state=42, cv=5, out_model=None):
     df = pd.read_csv(RAW)
     target = "quality_of_sleep"
+    groups = df["person_id"].copy() if "person_id" in df.columns else None
     X = df.drop(columns=[target, "person_id"], errors='ignore')
     # Pre-split blood pressure into numeric columns to avoid transformer naming issues
     if 'blood_pressure' in X.columns:
@@ -96,18 +101,33 @@ def main(cutoff=7, random_state=42, cv=5, out_model=None):
     y = df[target].astype(int)
     y_bin = binarise(y, cutoff=cutoff)
 
-    Xtr, Xte, ytr, yte = train_test_split(
-        X, y_bin, test_size=0.2, stratify=y_bin, random_state=random_state
-    )
+    if groups is not None:
+        holdout_splitter = StratifiedGroupKFold(n_splits=cv, shuffle=True, random_state=random_state)
+        train_idx, test_idx = next(holdout_splitter.split(X, y_bin, groups=groups))
+        groups_tr = groups.iloc[train_idx].reset_index(drop=True)
+    else:
+        holdout_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
+        train_idx, test_idx = next(holdout_splitter.split(X, y_bin))
+        groups_tr = None
+
+    Xtr = X.iloc[train_idx].reset_index(drop=True)
+    Xte = X.iloc[test_idx].reset_index(drop=True)
+    ytr = y_bin.iloc[train_idx].reset_index(drop=True)
+    yte = y_bin.iloc[test_idx].reset_index(drop=True)
 
     preprocessor = create_preprocessing_pipeline()
     clf = LogisticRegression(max_iter=1000, class_weight="balanced", solver="lbfgs", random_state=random_state)
     pipe = Pipeline([("prep", preprocessor), ("clf", clf)])
 
     # Cross-validated threshold selection (on TRAIN ONLY)
-    skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
+    if groups_tr is not None:
+        skf = StratifiedGroupKFold(n_splits=cv, shuffle=True, random_state=random_state)
+        split_generator = skf.split(Xtr, ytr, groups=groups_tr)
+    else:
+        skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
+        split_generator = skf.split(Xtr, ytr)
     oof_prob = np.zeros(len(Xtr))
-    for train_idx, val_idx in skf.split(Xtr, ytr):
+    for train_idx, val_idx in split_generator:
         X_tr, X_val = Xtr.iloc[train_idx], Xtr.iloc[val_idx]
         y_tr, y_val = ytr.iloc[train_idx], ytr.iloc[val_idx]
         pipe.fit(X_tr, y_tr)
@@ -128,14 +148,16 @@ def main(cutoff=7, random_state=42, cv=5, out_model=None):
     }).to_csv(OUT_REPORTS / "oof_probs_logreg.csv", index=False)
 
     # 5-fold CV reporting on TRAIN set with preprocessing inside the pipeline
+    cv_splitter = StratifiedGroupKFold(n_splits=cv, shuffle=True, random_state=random_state) if groups_tr is not None else StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
     cv_scores = cross_validate(
         pipe,
         Xtr,
         ytr,
-        cv=skf,
+        cv=cv_splitter,
         scoring=['accuracy', 'precision', 'recall', 'f1', 'roc_auc'],
         return_train_score=False,
-        n_jobs=None
+        n_jobs=None,
+        groups=groups_tr if groups_tr is not None else None
     )
     cv_df = pd.DataFrame(cv_scores)
     cv_df.to_csv(OUT_REPORTS / "cv_results_end_to_end.csv", index=False)

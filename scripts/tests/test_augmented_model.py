@@ -1,9 +1,10 @@
 """Edge-case checks for the augmented model."""
-import joblib
-import pandas as pd
-import numpy as np
 import sys
 from pathlib import Path
+
+import joblib
+import pandas as pd
+import pytest
 
 # Allow pipeline helpers to import at runtime
 scripts_dir = Path(__file__).parent.parent
@@ -11,6 +12,20 @@ if str(scripts_dir) not in sys.path:
     sys.path.append(str(scripts_dir))
 
 from shared_transforms import _split_bp
+
+
+@pytest.fixture(scope="module")
+def model():
+    repo_root = Path(__file__).resolve().parents[2]
+    candidates = [
+        repo_root / "models" / "sleep_quality_model.joblib",
+        repo_root / "models" / "model_augmented_latest.joblib",
+    ]
+    for path in candidates:
+        if path.exists():
+            return joblib.load(path)
+    pytest.skip("No trained model artifact found under models/. Run make train first.")
+
 
 def test_edge_cases(model):
     """Test specific edge cases that the original model struggled with"""

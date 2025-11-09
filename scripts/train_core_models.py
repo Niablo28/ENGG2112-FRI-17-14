@@ -15,7 +15,7 @@ This utility rebuilds the primary pipelines we keep in the repository:
 
 The script stores concise evaluation metrics for each model in
 ``reports/core_model_metrics.json`` so they can be surfaced in
-``models_statisitics.md``.
+``models_statistics.md``.
 
 Run from the repository root:
 

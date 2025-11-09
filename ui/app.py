@@ -87,6 +87,41 @@ def load_model():
         raise FileNotFoundError(f"Model not found at {MODEL_PATH.resolve()}")
     return joblib.load(MODEL_PATH)
 
+
+def _read_model_metrics():
+    repo_root = Path(__file__).resolve().parents[1]
+    summary_csv = repo_root / "reports" / "cv_results_end_to_end_summary.csv"
+    core_metrics = repo_root / "reports" / "core_model_metrics.json"
+    metrics = {}
+
+    if summary_csv.exists():
+        try:
+            summary = pd.read_csv(summary_csv)
+            for _, row in summary.iterrows():
+                metric_name = str(row.get("metric", ""))
+                mean_value = row.get("mean")
+                if metric_name and pd.notna(mean_value):
+                    metric_name = metric_name.replace("test_", "")
+                    metrics[metric_name] = round(float(mean_value), 3)
+        except Exception:
+            pass
+
+    if core_metrics.exists():
+        try:
+            payload = json.loads(core_metrics.read_text())
+            augmented_entries = [item for item in payload if "Augmented" in item.get("name", "")]
+            if augmented_entries:
+                entry = augmented_entries[0]
+                metrics["dataset"] = entry.get("dataset") or "–"
+                train_samples = entry.get("train_samples")
+                test_samples = entry.get("test_samples")
+                if train_samples is not None and test_samples is not None:
+                    metrics["samples"] = f"{train_samples}/{test_samples}"
+        except Exception:
+            pass
+
+    return metrics
+
 def _normalize_payload(payload: dict) -> dict:
     """Normalize categorical labels to the training vocabulary."""
     normalized = payload.copy()
@@ -99,9 +134,20 @@ def _normalize_payload(payload: dict) -> dict:
     # Normalize occupations
     occupation_map = {
         "Sales Representative": "Salesperson",
+        "Other": "Engineer",
     }
-    if normalized.get("occupation") in occupation_map:
-        normalized["occupation"] = occupation_map[normalized["occupation"]]
+    occupation = normalized.get("occupation", "Engineer")
+    normalized["occupation"] = occupation_map.get(occupation, occupation)
+    known_occupations = ["Engineer", "Doctor", "Nurse", "Teacher", "Salesperson", 
+                        "Scientist", "Accountant", "Lawyer", "Software Engineer"]
+    if normalized["occupation"] not in known_occupations:
+        normalized["occupation"] = "Engineer"
+    
+    known_disorders = ["None", "Insomnia", "Sleep Apnea"]
+    sleep_disorder = normalized.get("sleep_disorder", "None")
+    if sleep_disorder not in known_disorders:
+        normalized["sleep_disorder"] = "None"
+    
     return normalized
 
 def predict(payload: dict, threshold: float):
@@ -189,13 +235,16 @@ def create_gauge_chart(score):
     
     return fig
 
+metrics_snapshot = _read_model_metrics()
+
 col_header1, col_header2 = st.columns([3, 1])
 with col_header1:
     st.markdown("<h1 style='text-align: left;'>🌙 Sleep Quality AI Predictor</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #666; font-size: 1.2em;'>Discover your sleep score and get personalized insights</p>", unsafe_allow_html=True)
 with col_header2:
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.caption(f"Model: Augmented (ROC-AUC: 0.996)")
+    auc_display = metrics_snapshot.get("roc_auc", "–")
+    st.caption(f"Model: Augmented (ROC-AUC: {auc_display})")
 
 st.divider()
 
@@ -215,13 +264,20 @@ with st.sidebar:
     st.divider()
     
     st.header("📊 Model Info")
-    st.info("""
-    **Model Type:** Logistic Regression (Augmented)  
-    **Performance:** ROC-AUC = 0.996  
-    **Training Data:** 594 subjects (374 original + 220 synthetic)  
-    **Top Features:** Sleep duration, stress level, occupation  
-    **Improvements:** Better edge case handling, sleep disorder detection, severe case recognition
-    """)
+    accuracy = metrics_snapshot.get("accuracy", "–")
+    precision = metrics_snapshot.get("precision", "–")
+    recall = metrics_snapshot.get("recall", "–")
+    f1 = metrics_snapshot.get("f1", "–")
+    auc = metrics_snapshot.get("roc_auc", "–")
+    samples = metrics_snapshot.get("samples", "–")
+    dataset = metrics_snapshot.get("dataset", "–")
+    st.info(
+        "**Model Type:** Logistic Regression (Augmented)  \n"
+        f"**Performance (ROC-AUC):** {auc}  \n"
+        f"**Accuracy / Precision / Recall / F1:** {accuracy} / {precision} / {recall} / {f1}  \n"
+        f"**Train/Test samples:** {samples}  \n"
+        f"**Dataset:** {dataset}"
+    )
     st.caption("This tool is for educational purposes and general wellness insights only and is not medical advice.")
     st.divider()
     st.header("⚙️ Prediction Threshold")

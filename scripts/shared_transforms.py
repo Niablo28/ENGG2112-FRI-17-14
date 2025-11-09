@@ -20,7 +20,12 @@ def _split_bp(df: pd.DataFrame) -> pd.DataFrame:
     out = df.copy()
     if "blood_pressure" in out.columns:
         bp = out["blood_pressure"].astype(str).str.extract(r'(?P<bp_sys>\d{2,3})/(?P<bp_dia>\d{2,3})').astype(float)
-        out = out.drop(columns=["blood_pressure"]).join(bp)
+        out = out.drop(columns=["blood_pressure"], errors="ignore")
+        # Remove any pre-existing split columns to avoid duplication conflicts when joining
+        for col in ("bp_sys", "bp_dia"):
+            if col in out.columns:
+                out = out.drop(columns=[col])
+        out = out.join(bp)
     return out
 
 

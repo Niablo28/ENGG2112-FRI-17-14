@@ -152,6 +152,31 @@ def generate_synthetic_data(base_df, n_synthetic=200):
             row['sleep_disorder_missing'] = 0
         synthetic_rows.append(row)
 
+    # Oversleepers with poor quality to reinforce penalties on >9h sleep
+    print("Generating oversleep penalty cases...")
+    n_penalty = max(1, n_synthetic // 5)
+    for _ in range(n_penalty):
+        disorder = np.random.choice(['None', 'Insomnia', 'Sleep Apnea'], p=[0.4, 0.35, 0.25])
+        row = {
+            'person_id': len(base_df) + len(synthetic_rows) + 1,
+            'gender': np.random.choice(['Male', 'Female']),
+            'age': np.random.randint(20, 65),
+            'occupation': np.random.choice(['Student', 'Accountant', 'Doctor', 'Engineer', 'Nurse']),
+            'sleep_duration': np.random.uniform(9.5, 12.0),
+            'quality_of_sleep': np.random.choice([4, 5, 6], p=[0.45, 0.35, 0.20]),
+            'physical_activity_level': np.random.randint(10, 40),
+            'stress_level': np.random.randint(5, 9),
+            'bmi_category': np.random.choice(['Overweight', 'Obese']),
+            'blood_pressure': f"{np.random.randint(120, 150)}/{np.random.randint(80, 95)}",
+            'heart_rate': np.random.randint(75, 95),
+            'daily_steps': np.random.randint(1500, 6000),
+            'sleep_disorder': disorder,
+            'sleep_disorder_missing': 1
+        }
+        if disorder != 'None':
+            row['sleep_disorder_missing'] = 0
+        synthetic_rows.append(row)
+
     synthetic_df = pd.DataFrame(synthetic_rows)
 
     print(f"\nGenerated {len(synthetic_df)} synthetic samples")
